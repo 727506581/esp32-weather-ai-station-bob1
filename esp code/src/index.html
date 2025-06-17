@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天气站数据展示</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        header {
+            background-color: #0078d7;
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        main {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: center;
+        }
+        th {
+            background-color: #0078d7;
+            color: white;
+        }
+        .deepseek {
+            padding: 1.5rem;
+            background-color: #e7f3ff;
+            border: 1px solid #0078d7;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .button-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        button {
+            background-color: #0078d7;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        .loading {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        天气站数据展示
+    </header>
+    <main>
+        <div class="button-container">
+            <button onclick="refreshData()">手动刷新数据</button>
+        </div>
+
+        <h2>传感器数据</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>温度 (°C)</th>
+                    <th>湿度 (%)</th>
+                    <th>气压 (hPa)</th>
+                    <th>光照强度 (lux)</th>
+                </tr>
+            </thead>
+            <tbody id="sensor-data">
+                <tr>
+                    <td colspan="4" class="loading">加载中...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>DeepSeek 建议</h2>
+        <div class="deepseek" id="deepseek-result">
+            加载中...
+        </div>
+    </main>
+
+    <script>
+        // 定时获取传感器数据
+        async function fetchSensorData() {
+            try {
+                const response = await fetch('https://api.thingspeak.com/channels/2912224/feeds.json?api_key=5BWT3HJQM83H4JVB&results=1');
+                const data = await response.json();
+
+                const feed = data.feeds[0];
+                const tableBody = document.getElementById('sensor-data');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td>${feed.field1 || 'N/A'}</td>
+                        <td>${feed.field2 || 'N/A'}</td>
+                        <td>${feed.field3 || 'N/A'}</td>
+                        <td>${feed.field4 || 'N/A'}</td>
+                    </tr>
+                `;
+            } catch (error) {
+                console.error('获取传感器数据失败:', error);
+            }
+        }
+
+        // 定时获取 DeepSeek 返回的建议
+        async function fetchDeepSeekResult() {
+            try {
+                const responseSensors = await fetch('https://api.thingspeak.com/channels/2912224/feeds.json?api_key=5BWT3HJQM83H4JVB&results=1');
+                const sensorData = await responseSensors.json();
+                const feed = sensorData.feeds[0];
+
+                const temperature = feed.field1 || 'N/A';
+                const humidity = feed.field2 || 'N/A';
+                const pressure = feed.field3 || 'N/A';
+                const light = feed.field4 || 'N/A';
+
+                const responseDeepSeek = await fetch('https://api.deepseek.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer sk-998b828d337b4079ad4d824e0df829a8',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        messages: [
+                            { role: "system", content: "You are a helpful assistant." },
+                            { role: "user", content: `根据以下天气数据提供建议和预测：温度 ${temperature}°C，湿度 ${humidity}%，气压 ${pressure} hPa，光照强度 ${light} lux。` }
+                        ],
+                        model: "deepseek-chat"
+                    })
+                });
+
+                const deepSeekData = await responseDeepSeek.json();
+                const suggestion = deepSeekData.choices[0].message.content;
+
+                const deepSeekDiv = document.getElementById('deepseek-result');
+                deepSeekDiv.innerHTML = `
+                    <p><strong>建议:</strong> ${suggestion || '暂无建议'}</p>
+                `;
+            } catch (error) {
+                console.error('获取 DeepSeek 数据失败:', error);
+            }
+        }
+
+        // 手动刷新数据
+        function refreshData() {
+            fetchSensorData();
+            fetchDeepSeekResult();
+        }
+
+        // 每 10 分钟自动刷新一次数据
+        setInterval(() => {
+            refreshData();
+        }, 600000);
+
+        // 页面加载时立即获取数据
+        refreshData();
+    </script>
+</body>
+</html>
