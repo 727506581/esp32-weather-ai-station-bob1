@@ -33,6 +33,13 @@
 
 ## 📷 项目效果预览
 ![esp32 station](https://github.com/user-attachments/assets/ba9c63ab-8d72-4bdd-96ec-f23a204f6ddc)
+
+esp32 weather station
+
 ![front ui](https://github.com/user-attachments/assets/b17a1bec-ca23-4ed6-abb0-db9c21e9dded)
+
+front ui
+
 ![framework diagram](https://github.com/user-attachments/assets/5297616e-d758-4e1b-9749-a011052f5159)
 
+framework diagram
