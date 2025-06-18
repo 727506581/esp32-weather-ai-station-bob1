@@ -33,4 +33,6 @@
 
 ## 📷 项目效果预览
 ```markdown
-![前端展示图](./screenshots/front ui.jpg)
+![设备实物图](./screenshots/esp32 station.jpg)
+![网页展示图](./screenshots/front ui.jpg)
+
