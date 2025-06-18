@@ -32,8 +32,7 @@
 ---
 
 ## 📷 项目效果预览
-```markdown
-![设备实物图](./screenshots/esp32station.jpg)
+![esp32 station](https://github.com/user-attachments/assets/ba9c63ab-8d72-4bdd-96ec-f23a204f6ddc)
 ![网页展示图](./screenshots/front ui.jpg)
 ![网页展示图](./screenshots/framework diagram.jpg)
 
